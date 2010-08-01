@@ -90,8 +90,8 @@ module Toto
     end
 
     def article route
-      http "#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}"
-      #Article.new("#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
+      raise "#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}"
+      Article.new("#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
     end
 
     def /
