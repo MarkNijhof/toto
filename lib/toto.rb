@@ -19,12 +19,6 @@ $:.unshift File.dirname(__FILE__)
 require 'ext/ext'
 
 module Toto
-  Paths = {
-    :templates => "templates",
-    :pages => "templates/pages",
-    :articles => "articles"
-  }
-
   def self.env
     ENV['RACK_ENV'] || 'production'
   end
@@ -35,7 +29,7 @@ module Toto
 
   module Template
     def to_html page, config, &blk
-      path = ([:layout, :repo].include?(page) ? Paths[:templates] : Paths[:pages])
+      path = ([:layout, :repo].include?(page) ? @config[:templates] : @config[:pages])
       config[:to_html].call(path, page, binding)
     end
 
@@ -90,8 +84,8 @@ module Toto
     end
 
     def article route
-      raise "#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}"
-      Article.new("#{Paths[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
+      raise "#{@config[:articles]}/#{route.join('-')}.#{self[:ext]}"
+      Article.new("#{@config[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
     end
 
     def /
@@ -143,7 +137,7 @@ module Toto
     end
 
     def self.articles ext
-      Dir["#{Paths[:articles]}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
+      Dir["#{@config[:articles]}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
     end
 
     class Context
@@ -172,7 +166,7 @@ module Toto
 
       def to_xml page
         xml = Builder::XmlMarkup.new(:indent => 2)
-        instance_eval File.read("#{Paths[:templates]}/#{page}.builder")
+        instance_eval File.read("#{@config[:templates]}/#{page}.builder")
       end
       alias :to_atom to_xml
 
@@ -285,6 +279,10 @@ module Toto
 
   class Config < Hash
     Defaults = {
+      :templates => "templates",
+      :pages => "templates/pages",
+      :articles => "articles",
+
       :author => ENV['USER'],                               # blog author
       :title => Dir.pwd.split('/').last,                    # site title
       :root => "index",                                     # site index
