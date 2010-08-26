@@ -5,13 +5,7 @@ require 'rack'
 require 'digest'
 require 'open-uri'
 
-if RUBY_PLATFORM =~ /win32/
-  require 'maruku'
-  Markdown = Maruku
-else
-  require 'rdiscount'
-end
-
+require 'rdiscount'
 require 'builder'
 
 $:.unshift File.dirname(__FILE__)
@@ -91,11 +85,11 @@ module Toto
       self[:root]
     end
 
-    def go route, type = :html, env
+    def go route, type = :html
       route << self./ if route.empty?
       type, path = type =~ /html|xml|json/ ? type.to_sym : :html, route.join('/')
       context = lambda do |data, page|
-        Context.new(data, @config, path, env).render(page, type)
+        Context.new(data, @config, path).render(page, type)
       end
 
       body, status = if Context.new.respond_to?(:"to_#{type}")
@@ -132,20 +126,19 @@ module Toto
     end
 
     def articles
-      self.class.articles self[:ext]
+      self.class.articles self[:ext], self[:articles]
     end
 
-    def self.articles ext
-      Dir["#{@config[:articles]}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
+    def self.articles ext, articles
+      Dir["#{articles}/*.#{ext}"].sort_by {|entry| File.basename(entry) }
     end
 
     class Context
       include Template
-      attr_reader :env
 
-      def initialize ctx = {}, config = {}, path = "/", env = {}
-        @config, @context, @path, @env = config, ctx, path, env
-        @articles = Site.articles(@config[:ext]).reverse.map do |a|
+      def initialize ctx = {}, config = {}, path = "/"
+        @config, @context, @path = config, ctx, path
+        @articles = Site.articles(@config[:ext], @config[:articles]).reverse.map do |a|
           Article.new(a, @config)
         end
 
@@ -333,7 +326,7 @@ module Toto
       path, mime = @request.path_info.split('.')
       route = (path || '/').split('/').reject {|i| i.empty? }
 
-      response = @site.go(route, *(mime ? mime : []), env)
+      response = @site.go(route, *(mime ? mime : []))
 
       @response.body = [response[:body]]
       @response['Content-Length'] = response[:body].length.to_s unless response[:body].empty?
@@ -346,7 +339,7 @@ module Toto
         "no-cache, must-revalidate"
       end
 
-      @response['ETag'] = %("#{Digest::SHA1.hexdigest(response[:body])}")
+      @response['ETag'] = Digest::SHA1.hexdigest(response[:body])
 
       @response.status = response[:status]
       @response.finish

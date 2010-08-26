@@ -6,11 +6,11 @@ AUTHOR = "toto"
 
 context Toto do
   setup do
-    @config = Toto::Config.new(:markdown => true, :author => AUTHOR, :url => URL)
+    @config = Toto::Config.new(:markdown => true, :author => AUTHOR, :url => URL, :articles => "test/articles", :pages => "test/templates", :templates => "test/templates")
     @toto = Rack::MockRequest.new(Toto::Server.new(@config))
-    Toto::Paths[:articles] = "test/articles"
-    Toto::Paths[:pages] = "test/templates"
-    Toto::Paths[:templates] = "test/templates"
+    # Toto::Paths[:articles] = "test/articles"
+    # Toto::Paths[:pages] = "test/templates"
+    # Toto::Paths[:templates] = "test/templates"
   end
 
   context "GET /" do
