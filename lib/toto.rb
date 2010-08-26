@@ -84,7 +84,6 @@ module Toto
     end
 
     def article route
-      raise "#{@config[:articles]}/#{route.join('-')}.#{self[:ext]}"
       Article.new("#{@config[:articles]}/#{route.join('-')}.#{self[:ext]}", @config).load
     end
 
